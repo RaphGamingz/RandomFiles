@@ -1,6 +1,7 @@
 package client;
 
 import java.awt.BorderLayout;
+import java.awt.Canvas;
 import java.awt.EventQueue;
 import java.awt.FlowLayout;
 
@@ -13,13 +14,14 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.UIManager;
 
-public class ClientWindow {
+public class ClientWindow extends Canvas {
 
+	private static final long serialVersionUID = -1649555742304077525L;
 	private JFrame frame;
-	private JTextField messageField;
+	private static JTextField messageField;
 	private static JTextArea textArea = new JTextArea();
 
-	private Client client;
+	private static Client client;
 	
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
@@ -39,7 +41,8 @@ public class ClientWindow {
 		initialize();
 		
 		String name = JOptionPane.showInputDialog("Enter name");
-		client = new Client(name, "raphcraft.hopto.org", 5000);
+		String address = JOptionPane.showInputDialog("Enter address");
+		client = new Client(name, address, 5000);
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 		    @Override
 		    public void run() {
@@ -73,14 +76,20 @@ public class ClientWindow {
 				client.send(messageField.getText());
 				messageField.setText("");
 			}
-		});
-		
+		});		
 		panel.add(btnSend);
+		frame.getRootPane().setDefaultButton(btnSend);
 		
 		frame.setLocationRelativeTo(null);
+		this.requestFocus();
+		this.addKeyListener(new Input());
 	}
-
+	
 	public static void printToConsole(String message) {
-		textArea.setText(textArea.getText()+message+"\n");
+		textArea.setText(textArea.getText() + message + "\n");
+	}
+	
+	public static void send() {
+		client.send(messageField.getText());
 	}
 }

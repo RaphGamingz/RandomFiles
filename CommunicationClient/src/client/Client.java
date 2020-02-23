@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class Client {
 
@@ -43,7 +45,9 @@ public class Client {
 			DatagramPacket packet = new DatagramPacket(data, data.length, address, port);
 			socket.send(packet);
 
-			System.out.println("Sent: " + message + " To: " + address.getHostAddress() + ":" + port);
+			DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+			LocalDateTime now = LocalDateTime.now();
+			System.out.println(dtf.format(now) + ": Sent: " + message + " To: " + address.getHostAddress() + ":" + port);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -60,7 +64,7 @@ public class Client {
 
 						String message = new String(data);
 						message = message.substring(0, message.indexOf("\\n"));
-
+						
 						// MANAGE MESSAGE
 						if (!isCommand(message, packet)) {
 							ClientWindow.printToConsole(message);
