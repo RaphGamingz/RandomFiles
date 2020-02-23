@@ -5,7 +5,9 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
-import java.util.ArrayList;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.LinkedList;
 import java.util.List;
 
 public class Server {
@@ -14,8 +16,8 @@ public class Server {
 	private static boolean running;
 
 	private static int ClientID;
-	private static List<ClientInfo> clients = new ArrayList<ClientInfo>();
-	
+	private static List<ClientInfo> clients = new LinkedList<ClientInfo>();
+
 	public static void start(int port) {
 		try {
 			socket = new DatagramSocket(port);
@@ -44,7 +46,9 @@ public class Server {
 			DatagramPacket packet = new DatagramPacket(data, data.length, address, port);
 			socket.send(packet);
 
-			System.out.println("Sent: " + message + " To: " + address.getHostAddress() + ":" + port);
+			DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+			LocalDateTime now = LocalDateTime.now();
+			System.out.println(dtf.format(now) + ": Sent: " + message + " To: " + address.getHostAddress() + ":" + port);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -75,37 +79,41 @@ public class Server {
 	}
 
 	/*
-	 * SERVER COMMAND LIST
-	 * \con:[name] -> Connects Client To Server
-	 * \dis:[id] -> Disconnects Client To Server
+	 * SERVER COMMAND LIST \con:[name] -> Connects Client To Server \dis:[id] ->
+	 * Disconnects Client To Server
 	 */
 	private static boolean isCommand(String message, DatagramPacket packet) {
 		if (message.startsWith("\\con:")) {
-			//RUN CONNECTION CODE
-			
+			// RUN CONNECTION CODE
+
 			String name = message.substring(message.indexOf(":") + 1);
 			ClientInfo info = new ClientInfo(packet.getAddress(), packet.getPort(), name, ClientID++);
 			clients.add(info);
 			broadcast("User " + name + " Connected!");
-			
-			send("\\id:"+info.getId(), info.getAddress(), info.getPort());
+
+			send("\\id:" + info.getId(), info.getAddress(), info.getPort());
 			return true;
-		} else if  (message.startsWith("\\dis:")) {
-			//RUN DISCONNECTION CODE
-			
+		} else if (message.startsWith("\\dis:")) {
+			// RUN DISCONNECTION CODE
+
 			int id = Integer.parseInt(message.substring(message.indexOf(":") + 1));
-			for (ClientInfo client : clients) {
-				if (client.getId() == id) {
-					clients.remove(client);
-					broadcast("User " + client.getName() + " Disconnected!");
+
+			try {
+				for (ClientInfo client : clients) {
+					if (client.getId() == id) {
+						clients.remove(client);
+						broadcast("User " + client.getName() + " Disconnected!");
+					}
 				}
+			} catch (Exception e) {
+				System.out.println("ERROR OCCURED, MOST LIKELY BECAUSE LAST PERSON LEFT");
 			}
 			return true;
 		}
-		
+
 		return false;
 	}
-	
+
 	public static void stop() {
 		running = false;
 	}
